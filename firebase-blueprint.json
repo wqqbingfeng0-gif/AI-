@@ -1,0 +1,35 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile data",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "PresetData": {
+      "title": "PresetData",
+      "description": "A preset wrapper for different lab types",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "labId": { "type": "string" },
+        "presets": { "type": "string", "description": "Stringified JSON of the presets to avoid complex array schema" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "labId", "presets", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile details"
+    },
+    "/presets/{presetDocId}": {
+      "schema": { "$ref": "#/entities/PresetData" },
+      "description": "User's presets mapping by labId. Document ID should combine userId_labId."
+    }
+  }
+}
