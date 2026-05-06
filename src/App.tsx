@@ -52,7 +52,6 @@ import { FaceMaskTool } from './components/FaceMaskTool';
 import { PromptLibrary } from './components/PromptLibrary';
 import { ScriptAssetLab } from './components/ScriptAssetLab';
 import { PromptLab } from './components/PromptLab';
-import { AuthComponent } from './components/AuthComponent';
 import { useSyncPresets } from './lib/useSyncPresets';
 import { Beaker } from 'lucide-react';
 
@@ -1164,9 +1163,17 @@ export default function App() {
             </nav>
           </div>
           <div className="flex items-center gap-4">
-             <AuthComponent />
-             <button onClick={() => setShowSettingsModal(true)} className="p-2 text-white/50 hover:text-brand-accent hover:bg-white/5 rounded-lg transition-all" title="模型 & 设置">
-                <Settings className="w-5 h-5" />
+             <button
+                onClick={() => setShowSettingsModal(true)}
+                className={`flex items-center gap-2 px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all ${
+                  customApiKey
+                    ? 'text-green-400 bg-green-400/10 border border-green-400/20'
+                    : 'text-brand-accent bg-brand-accent/10 border border-brand-accent/20 hover:bg-brand-accent/20'
+                }`}
+                title="配置 API 密钥"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                {customApiKey ? 'API 已配置' : '设置 API Key'}
              </button>
           </div>
         </header>
@@ -2213,46 +2220,30 @@ export default function App() {
               <div className="space-y-2 text-center">
                 <h3 className="text-lg font-bold text-white flex items-center justify-center gap-2">
                   <Settings className="w-5 h-5 text-brand-accent" />
-                  模型与 API 设置
+                  设置
                 </h3>
                 <p className="text-[11px] text-text-secondary leading-relaxed max-w-[280px] mx-auto">
-                  此平台已内置可免费调用的 Gemini 1.5/2.5 系列模型，遇到异常时会自动顺延使用次一级模型。
+                  填入你的 Gemini API Key 即可开始使用。获取地址：
+                  <a
+                    href="https://aistudio.google.com/apikey"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-brand-accent hover:underline"
+                  >aistudio.google.com/apikey</a>
                 </p>
               </div>
 
               <div className="space-y-4">
                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-text-secondary uppercase">如果遇到请求报错，需要平台系统级切换可以</label>
-                    <button 
-                      onClick={() => {
-                        setShowSettingsModal(false);
-                        if (typeof window !== 'undefined' && 'aistudio' in window) {
-                          (window as any).aistudio.openSelectKey();
-                        } else {
-                          setAlertMessage("当前环境不支持呼出平台 API 面板");
-                        }
-                      }}
-                      className="w-full py-3 bg-brand-sidebar border border-brand-border hover:bg-white/5 text-xs font-bold text-white rounded-xl transition-all flex items-center justify-center gap-2"
-                    >
-                      <Layers className="w-4 h-4 text-brand-accent" />
-                      呼出平台 API 设置面板
-                    </button>
-                    <p className="text-[9px] text-white/30 text-center">在这里你也可以选择填入你在 Google AI Studio 的 Gemini 模型 API 密钥</p>
-                 </div>
-
-                 <div className="relative flex py-2 items-center">
-                    <div className="flex-grow border-t border-brand-border/50"></div>
-                 </div>
-
-                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-text-secondary uppercase">自定义其它模型的 API Key</label>
-                    <input 
+                    <label className="text-[10px] font-bold text-text-secondary uppercase">Gemini API Key</label>
+                    <input
                       type="password"
-                      placeholder="填入您的自定义 API Key (空则使用默认)"
+                      placeholder="在此粘贴你的 Gemini API Key"
                       value={customApiKey}
                       onChange={(e) => setCustomApiKey(e.target.value)}
                       className="w-full bg-black/40 border border-brand-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-accent/50 focus:ring-1 focus:ring-brand-accent/50 transition-all font-mono"
                     />
+                    <p className="text-[9px] text-white/30 text-center">密钥仅保存在本地浏览器中，不会上传到任何服务器</p>
                  </div>
 
                  <div className="relative flex py-4 items-center">
@@ -2283,7 +2274,7 @@ export default function App() {
                          导出项目数据
                       </button>
                     </div>
-                    <p className="text-[9px] text-white/30 text-center">提示词预设已自动同步至云端，导出仅包含所有独立项目的脚本内容与进度</p>
+                    <p className="text-[9px] text-white/30 text-center">所有数据仅保存在本地浏览器中，建议定期导出备份</p>
                     <input 
                       type="file" 
                       accept="application/json" 

@@ -77,7 +77,7 @@ export const ScriptAssetLab: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
-  const [presets, setPresets, loadingFirebase] = useSyncPresets('lab_presets_v2', DEFAULT_PRESETS);
+  const [presets, setPresets] = useSyncPresets('lab_presets_v2', DEFAULT_PRESETS);
   
   // Update active preset whenever presets finishes loading initially
   useEffect(() => {
@@ -151,7 +151,13 @@ export const ScriptAssetLab: React.FC = () => {
     setStatus('AI 正在深度解析剧本资产...');
     
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const apiKey = localStorage.getItem('CUSTOM_GEMINI_API_KEY');
+      if (!apiKey) {
+        setStatus('请先在右上角设置 Gemini API Key');
+        setLoading(false);
+        return;
+      }
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: "gemini-3.1-pro-preview",
         contents: `剧本内容如下：\n\n${script}\n\n请开始执行任务。`,
