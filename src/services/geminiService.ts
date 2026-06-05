@@ -1,11 +1,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 async function callGeminiProxy(params: any) {
-  const apiKey = localStorage.getItem('CUSTOM_GEMINI_API_KEY');
-  if (!apiKey) {
-    throw new Error('请先设置 Gemini API 密钥。点击右上角 ⚙️ 进行配置。');
-  }
-  const ai = new GoogleGenAI({ apiKey });
+  // Check for custom user-provided API key, otherwise fallback to platform default
+  const customApiKey = localStorage.getItem('CUSTOM_GEMINI_API_KEY');
+  const ai = new GoogleGenAI({ apiKey: customApiKey || process.env.GEMINI_API_KEY });
   
   let modelsToTry = [
     "gemini-2.5-pro",

@@ -1,0 +1,82 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // -- User Entity --
+    function isValidUser(data) {
+      return data.keys().size() <= 2
+        && (!('email' in data) || (data.email is string && data.email.size() <= 256))
+        && (!('createdAt' in data) || data.createdAt == request.time);
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false; // No blanket listing
+      allow create: if isOwner(userId)
+                    && isValidId(userId)
+                    && isValidUser(incoming());
+      // Updates usually not needed or handled carefully
+    }
+
+    // -- PresetData Entity --
+    function isValidPresetData(data) {
+      return data.keys().hasAll(['userId', 'labId', 'presets', 'updatedAt']) 
+        && data.keys().size() == 4
+        && data.userId is string && data.userId.size() <= 128
+        && data.userId == request.auth.uid // Enforce identity integrity
+        && data.labId is string && data.labId.size() <= 64
+        && data.presets is string && data.presets.size() <= 500000 // 500kb max
+        && data.updatedAt == request.time;
+    }
+
+    function isValidPresetUpdate(data, resData) {
+      return data.userId == resData.userId
+        && data.labId == resData.labId
+        && data.presets is string && data.presets.size() <= 500000
+        && data.updatedAt == request.time;
+    }
+
+    match /presets/{presetDocId} {
+      // Read allowed only if the document belongs to the requesting user
+      allow get: if isSignedIn() && (resource == null || existing().userId == request.auth.uid);
+      // List explicitly checks that the user is only querying their own presets
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      allow create: if isSignedIn() 
+                    && isValidId(presetDocId) 
+                    && isValidPresetData(incoming());
+                    
+      allow update: if isSignedIn()
+                    && existing().userId == request.auth.uid
+                    && isValidId(presetDocId)
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['presets', 'updatedAt'])
+                    && isValidPresetUpdate(incoming(), existing());
+
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+  }
+}

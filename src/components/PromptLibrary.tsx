@@ -17,7 +17,7 @@ interface PromptLibraryProps {
 import { useSyncPresets } from '../lib/useSyncPresets';
 
 export const PromptLibrary: React.FC<PromptLibraryProps> = ({ setStatus }) => {
-  const [presets, setPresets] = useSyncPresets<Preset[]>('prompt_presets', [
+  const [presets, setPresets, loadingFirebase] = useSyncPresets<Preset[]>('prompt_presets', [
       { id: '1', title: '分镜图单帧放大', content: '角色服装严格参考图1生成写实风格\n角色面部严格参考图2生成写实风格人脸\n高倍率放大，细节增强，电影质感，4K分辨率' }
   ]);
 
@@ -90,13 +90,7 @@ export const PromptLibrary: React.FC<PromptLibraryProps> = ({ setStatus }) => {
     setIsGenerating(true);
     setStatus('AI 正在构思专业提示词...');
     try {
-      const apiKey = localStorage.getItem('CUSTOM_GEMINI_API_KEY');
-      if (!apiKey) {
-        setStatus('请先在右上角设置 Gemini API Key');
-        setIsGenerating(false);
-        return;
-      }
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       const response = await ai.models.generateContent({
         model: "gemini-3.1-pro-preview",
         contents: `你是一个专业的AI绘画提示词专家。请根据以下预设名称，生成一段高质量的Stable Diffusion或Midjourney提示词，要求包含画面细节、质感、光影、风格描述。
